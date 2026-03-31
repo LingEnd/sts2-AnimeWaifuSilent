@@ -9,6 +9,11 @@ using Void = MegaCrit.Sts2.Core.Models.Cards.Void;
 
 namespace AnimeWaifuSilent.AnimeWaifuSilentCode;
 
+/// <summary>
+/// 拦截 <see cref="CardModel.Portrait"/> 的读取过程，将指定卡牌的原始立绘替换为模组内的二次元卡图。
+/// 这里还会优先生成并缓存带有 Mipmap 的纹理，为预览卡片时的平滑显示提供更合适的资源数据，
+/// 从而配合 <c>CardFilterUtility.cs</c> 一起减轻卡牌在缩放或放大预览时出现的边缘锯齿。
+/// </summary>
 [HarmonyPatch(typeof(CardModel), nameof(CardModel.Portrait), MethodType.Getter)]
 public static class CardPortraitReplacementPatch
 {
@@ -80,10 +85,15 @@ public static class CardPortraitReplacementPatch
         { typeof(Shiv), "res://AnimeWaifuSilent/card_portraits/token/shiv.png" }, // 小刀
     };
 
-    // Cache runtime-generated textures to avoid repeated decode/mipmap work.
+    // 缓存已经生成过 Mipmap 的替换贴图，避免每次读取卡图时重复解码和重复生成。
     private static readonly Dictionary<string, Texture2D> ReplacementTextureCache = new(StringComparer.OrdinalIgnoreCase);
+
+    // 记录本模组运行时创建出的贴图实例，供过滤补丁快速判断当前纹理是否来自本模组。
     private static readonly HashSet<ulong> ReplacementTextureIds = new();
 
+    /// <summary>
+    /// 在游戏请求卡牌立绘时，将其替换为本模组对应的图片资源。
+    /// </summary>
     static void Postfix(CardModel __instance, ref Texture2D __result)
     {
         if (!TryGetReplacementPath(__instance, out string path))
@@ -94,6 +104,9 @@ public static class CardPortraitReplacementPatch
             __result = portrait;
     }
 
+    /// <summary>
+    /// 判断某张纹理是否属于本模组的替换卡图。
+    /// </summary>
     public static bool IsModPortraitTexture(Texture2D? texture)
     {
         if (texture == null)
@@ -110,11 +123,18 @@ public static class CardPortraitReplacementPatch
         return resourcePath.StartsWith(ModPortraitRoot, StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>
+    /// 判断某张卡牌当前使用的立绘是否来自本模组。
+    /// </summary>
     public static bool IsModPortraitModel(CardModel? model)
     {
         return IsModPortraitTexture(model?.Portrait);
     }
 
+    /// <summary>
+    /// 加载并缓存替换立绘。
+    /// 会尽量优先创建带 Mipmap 的纹理，以便在卡牌缩放和放大预览时减少锯齿。
+    /// </summary>
     private static Texture2D? LoadReplacementTexture(string path)
     {
         if (ReplacementTextureCache.TryGetValue(path, out var cached))
@@ -144,6 +164,9 @@ public static class CardPortraitReplacementPatch
         return textureWithMipmaps;
     }
 
+    /// <summary>
+    /// 根据卡牌运行时类型查找对应的替换图片路径。
+    /// </summary>
     private static bool TryGetReplacementPath(CardModel model, out string path)
     {
         if (Replacements.TryGetValue(model.GetType(), out string? value) && !string.IsNullOrEmpty(value))
@@ -156,6 +179,10 @@ public static class CardPortraitReplacementPatch
         return false;
     }
 
+    /// <summary>
+    /// 直接从文件读取图片并生成带 Mipmap 的纹理。
+    /// 这样在卡牌被缩小或放大时，预览边缘会更平滑。
+    /// </summary>
     private static Texture2D? CreateMipmappedTextureFromFile(string path)
     {
         Image image = new();
@@ -178,6 +205,9 @@ public static class CardPortraitReplacementPatch
         return ImageTexture.CreateFromImage(image);
     }
 
+    /// <summary>
+    /// 从已有纹理对象中取出图像数据，并补生成 Mipmap 后重新创建纹理。
+    /// </summary>
     private static Texture2D? CreateMipmappedTexture(Texture2D sourceTexture)
     {
         Image image = sourceTexture.GetImage();
@@ -195,101 +225,3 @@ public static class CardPortraitReplacementPatch
     }
 }
 
-[HarmonyPatch(typeof(NTinyCard), nameof(NTinyCard._Ready))]
-public static class TinyCardTextureFilterPatch
-{
-    static void Postfix(NTinyCard __instance)
-    {
-        CardFilterUtility.TryApplyTinyCardPortraitFilters(__instance);
-    }
-}
-
-[HarmonyPatch(typeof(NCard), nameof(NCard._Ready))]
-public static class CardTextureFilterPatch
-{
-    static void Postfix(NCard __instance)
-    {
-        CardFilterUtility.TryApplyNCardPortraitFilters(__instance);
-    }
-}
-
-[HarmonyPatch(typeof(NCard), "Reload")]
-public static class CardTextureFilterReloadPatch
-{
-    static void Postfix(NCard __instance)
-    {
-        CardFilterUtility.TryApplyNCardPortraitFilters(__instance);
-    }
-}
-
-public static class CardFilterUtility
-{
-    // Godot 4 enum value: LinearWithMipmaps.
-    private const CanvasItem.TextureFilterEnum PreferredFilter = (CanvasItem.TextureFilterEnum)4;
-    private static readonly string[] NCardPortraitNodePaths =
-    {
-        "%Portrait",
-        "%AncientPortrait",
-        "%PortraitBorder",
-        "%PortraitCanvasGroup",
-    };
-
-    public static bool TryApplyNCardPortraitFilters(NCard card)
-    {
-        if (!CardPortraitReplacementPatch.IsModPortraitModel(card.Model))
-        {
-            return false;
-        }
-
-        ApplyNCardPortraitFilters(card);
-        return true;
-    }
-
-    public static void ApplyNCardPortraitFilters(NCard card)
-    {
-        foreach (string nodePath in NCardPortraitNodePaths)
-        {
-            ApplyFilterToNode(card.GetNodeOrNull<CanvasItem>(nodePath));
-        }
-
-        CanvasItem? portraitCanvas = card.GetNodeOrNull<CanvasItem>("%PortraitCanvasGroup");
-        if (portraitCanvas != null)
-        {
-            // CanvasGroup may contain additional draw nodes that inherit nearest filter from scene defaults.
-            ApplySmoothFilteringRecursively(portraitCanvas);
-        }
-    }
-
-    public static bool TryApplyTinyCardPortraitFilters(NTinyCard tinyCard)
-    {
-        TextureRect? portrait = tinyCard.GetNodeOrNull<TextureRect>("%Portrait");
-        if (portrait == null || !CardPortraitReplacementPatch.IsModPortraitTexture(portrait.Texture))
-        {
-            return false;
-        }
-
-        ApplyFilterToNode(portrait);
-        ApplyFilterToNode(tinyCard.GetNodeOrNull<CanvasItem>("%PortraitShadow"));
-        return true;
-    }
-
-    private static void ApplySmoothFilteringRecursively(Node node)
-    {
-        ApplyFilterToNode(node as CanvasItem);
-
-        foreach (Node child in node.GetChildren())
-        {
-            ApplySmoothFilteringRecursively(child);
-        }
-    }
-
-    private static void ApplyFilterToNode(CanvasItem? canvasItem)
-    {
-        if (canvasItem == null)
-        {
-            return;
-        }
-
-        canvasItem.TextureFilter = PreferredFilter;
-    }
-}
