@@ -85,17 +85,41 @@ jobs:
             Write-Host "Using ci/sts2-refs.zip from the repository."
           }
           elseif (-not [string]::IsNullOrWhiteSpace($env:STS2_REFS_ARCHIVE_URL)) {
-            $headers = @{}
-            if (-not [string]::IsNullOrWhiteSpace($env:STS2_REFS_AUTH_HEADER)) {
-              $headers["Authorization"] = $env:STS2_REFS_AUTH_HEADER
+            $downloadUrl = $env:STS2_REFS_ARCHIVE_URL.Trim()
+            $headers = @{
+              "User-Agent" = "AnimeWaifuSilent-GitHubActions"
             }
 
-            Write-Host "Downloading STS2 reference archive from configured URL."
-            if ($headers.Count -gt 0) {
-              Invoke-WebRequest -Uri $env:STS2_REFS_ARCHIVE_URL -Headers $headers -OutFile $archivePath
+            if (-not [string]::IsNullOrWhiteSpace($env:STS2_REFS_AUTH_HEADER)) {
+              $authValue = $env:STS2_REFS_AUTH_HEADER.Trim()
+              if (-not ($authValue.StartsWith("Bearer ", [System.StringComparison]::OrdinalIgnoreCase) -or $authValue.StartsWith("token ", [System.StringComparison]::OrdinalIgnoreCase))) {
+                $authValue = "Bearer $authValue"
+              }
+              $headers["Authorization"] = $authValue
             }
-            else {
-              Invoke-WebRequest -Uri $env:STS2_REFS_ARCHIVE_URL -OutFile $archivePath
+
+            if ($downloadUrl -match '^https://github\.com/([^/]+)/([^/]+)/raw/([^/]+)/(.+)$') {
+              $owner = $Matches[1]
+              $repo = $Matches[2]
+              $gitRef = $Matches[3]
+              $path = $Matches[4]
+              $downloadUrl = "https://api.github.com/repos/$owner/$repo/contents/$path?ref=$gitRef"
+              $headers["Accept"] = "application/vnd.github.raw"
+              $headers["X-GitHub-Api-Version"] = "2022-11-28"
+              Write-Host "Normalized GitHub raw URL to GitHub API download."
+            }
+            elseif ($downloadUrl -like "https://api.github.com/repos/*") {
+              $headers["Accept"] = "application/vnd.github.raw"
+              $headers["X-GitHub-Api-Version"] = "2022-11-28"
+            }
+
+            Write-Host "Downloading STS2 reference archive from configured URL: $downloadUrl"
+            Invoke-WebRequest -Uri $downloadUrl -Headers $headers -OutFile $archivePath
+
+            $signature = [System.Text.Encoding]::ASCII.GetString([System.IO.File]::ReadAllBytes($archivePath), 0, 2)
+            if ($signature -ne 'PK') {
+              $preview = Get-Content $archivePath -TotalCount 20 | Out-String
+              throw "Downloaded file is not a zip archive. Check STS2_REFS_ARCHIVE_URL and STS2_REFS_AUTH_HEADER. Preview: $preview"
             }
           }
           else {
