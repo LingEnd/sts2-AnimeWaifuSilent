@@ -1,0 +1,195 @@
+name: Build and Release Mod
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Optional version override, for example: 1.0.1 or v1.0.1"
+        required: false
+        default: ""
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build-package:
+    name: Build universal mod package
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: pwsh
+    env:
+      GODOT_ARCHIVE_URL: https://github.com/godotengine/godot/releases/download/4.5.1-stable/Godot_v4.5.1-stable_mono_win64.zip
+      STS2_REFS_ARCHIVE_URL: ${{ vars.STS2_REFS_ARCHIVE_URL }}
+      STS2_REFS_AUTH_HEADER: ${{ secrets.STS2_REFS_AUTH_HEADER }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET 9
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 9.0.x
+
+      - name: Resolve version
+        id: version
+        run: |
+          $version = "${{ inputs.version }}"
+          if ([string]::IsNullOrWhiteSpace($version)) {
+            $manifest = Get-Content "AnimeWaifuSilent.json" -Raw | ConvertFrom-Json
+            $version = $manifest.version
+          }
+
+          $version = $version.Trim()
+          if ($version.StartsWith("v")) {
+            $version = $version.Substring(1)
+          }
+
+          "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Version: $version"
+
+      - name: Download Godot Mono
+        id: godot
+        run: |
+          $archivePath = Join-Path $env:RUNNER_TEMP "godot-mono.zip"
+          $extractDir = Join-Path $env:RUNNER_TEMP "godot-mono"
+
+          Invoke-WebRequest -Uri $env:GODOT_ARCHIVE_URL -OutFile $archivePath
+          Expand-Archive -Path $archivePath -DestinationPath $extractDir -Force
+
+          $godotExe = Get-ChildItem -Path $extractDir -Recurse -Filter "Godot_v*_mono_win64.exe" | Select-Object -First 1 -ExpandProperty FullName
+          if ([string]::IsNullOrWhiteSpace($godotExe)) {
+            throw "Godot executable was not found after extraction."
+          }
+
+          "path=$godotExe" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Write-Host "Godot path: $godotExe"
+
+      - name: Prepare STS2 references
+        id: sts2refs
+        run: |
+          $archiveFromRepo = Join-Path (Get-Location).Path "ci/sts2-refs.zip"
+          $archivePath = Join-Path $env:RUNNER_TEMP "sts2-refs.zip"
+          $extractDir = Join-Path $env:RUNNER_TEMP "sts2-refs"
+          $normalizedDir = Join-Path $env:RUNNER_TEMP "sts2-refs-normalized"
+
+          if (Test-Path $archiveFromRepo) {
+            Copy-Item $archiveFromRepo $archivePath -Force
+            Write-Host "Using ci/sts2-refs.zip from the repository."
+          }
+          elseif (-not [string]::IsNullOrWhiteSpace($env:STS2_REFS_ARCHIVE_URL)) {
+            $headers = @{}
+            if (-not [string]::IsNullOrWhiteSpace($env:STS2_REFS_AUTH_HEADER)) {
+              $headers["Authorization"] = $env:STS2_REFS_AUTH_HEADER
+            }
+
+            Write-Host "Downloading STS2 reference archive from configured URL."
+            if ($headers.Count -gt 0) {
+              Invoke-WebRequest -Uri $env:STS2_REFS_ARCHIVE_URL -Headers $headers -OutFile $archivePath
+            }
+            else {
+              Invoke-WebRequest -Uri $env:STS2_REFS_ARCHIVE_URL -OutFile $archivePath
+            }
+          }
+          else {
+            throw "Provide ci/sts2-refs.zip or set the STS2_REFS_ARCHIVE_URL variable. The archive should contain sts2.dll and 0Harmony.dll."
+          }
+
+          if (Test-Path $extractDir) {
+            Remove-Item $extractDir -Recurse -Force
+          }
+          if (Test-Path $normalizedDir) {
+            Remove-Item $normalizedDir -Recurse -Force
+          }
+
+          Expand-Archive -Path $archivePath -DestinationPath $extractDir -Force
+          New-Item -ItemType Directory -Path $normalizedDir | Out-Null
+
+          $sts2Dll = Get-ChildItem -Path $extractDir -Recurse -Filter "sts2.dll" | Select-Object -First 1 -ExpandProperty FullName
+          $harmonyDll = Get-ChildItem -Path $extractDir -Recurse -Filter "0Harmony.dll" | Select-Object -First 1 -ExpandProperty FullName
+
+          if ([string]::IsNullOrWhiteSpace($sts2Dll)) {
+            throw "Missing required reference file in STS2 archive: sts2.dll"
+          }
+          if ([string]::IsNullOrWhiteSpace($harmonyDll)) {
+            throw "Missing required reference file in STS2 archive: 0Harmony.dll"
+          }
+
+          Copy-Item $sts2Dll (Join-Path $normalizedDir "sts2.dll") -Force
+          Copy-Item $harmonyDll (Join-Path $normalizedDir "0Harmony.dll") -Force
+
+          "path=$normalizedDir" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+          Get-ChildItem $normalizedDir | Format-Table Name, Length
+
+      - name: Publish mod
+        run: |
+          $workspace = (Get-Location).Path
+          $modsPath = Join-Path $workspace "release-out"
+
+          if (Test-Path $modsPath) {
+            Remove-Item $modsPath -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path $modsPath | Out-Null
+
+          $arguments = @(
+            "publish", "AnimeWaifuSilent.csproj",
+            "-c", "Release",
+            "-p:ContinuousIntegrationBuild=true",
+            "-p:GodotPath=${{ steps.godot.outputs.path }}",
+            "-p:Sts2RefsDir=${{ steps.sts2refs.outputs.path }}",
+            "-p:ModsPath=$modsPath/"
+          )
+
+          Write-Host "Running: dotnet $($arguments -join ' ')"
+          dotnet @arguments
+
+      - name: Verify package contents
+        run: |
+          $outDir = Join-Path (Get-Location).Path "release-out/AnimeWaifuSilent"
+          $requiredFiles = @(
+            "AnimeWaifuSilent.dll",
+            "AnimeWaifuSilent.json",
+            "AnimeWaifuSilent.pck"
+          )
+
+          foreach ($file in $requiredFiles) {
+            $path = Join-Path $outDir $file
+            if (-not (Test-Path $path)) {
+              throw "Missing required file: $path"
+            }
+          }
+
+          Get-ChildItem $outDir | Format-Table Name, Length
+
+      - name: Create release zip
+        run: |
+          $workspace = (Get-Location).Path
+          $sourceDir = Join-Path $workspace "release-out/AnimeWaifuSilent"
+          $zipPath = Join-Path $workspace "AnimeWaifuSilent-v${{ steps.version.outputs.value }}.zip"
+
+          if (Test-Path $zipPath) {
+            Remove-Item $zipPath -Force
+          }
+
+          Compress-Archive -Path $sourceDir -DestinationPath $zipPath -CompressionLevel Optimal
+          Write-Host "Created: $zipPath"
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AnimeWaifuSilent-v${{ steps.version.outputs.value }}
+          path: AnimeWaifuSilent-v${{ steps.version.outputs.value }}.zip
+
+      - name: Publish GitHub Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: AnimeWaifuSilent-v${{ steps.version.outputs.value }}.zip
+          generate_release_notes: true
