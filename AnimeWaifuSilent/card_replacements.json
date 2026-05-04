@@ -1,0 +1,231 @@
+{
+  "normalReplacements": [
+    {
+      "cardType": "Alchemize",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/colorless/Alchemize.png"
+    },
+    {
+      "cardType": "Panache",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/colorless/Panache.png"
+    },
+    {
+      "cardType": "AscendersBane",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/curse/AscendersBane.png"
+    },
+    {
+      "cardType": "Shame",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/curse/Shame.png"
+    },
+    {
+      "cardType": "Apparition",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/event/Apparition.png"
+    },
+    {
+      "cardType": "WraithForm",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/event/WraithForm.png"
+    },
+    {
+      "cardType": "Fear",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/necrobinder/Fear.png"
+    },
+    {
+      "cardType": "Accelerant",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Accelerant.png"
+    },
+    {
+      "cardType": "Accuracy",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Accuracy.png"
+    },
+    {
+      "cardType": "Acrobatics",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Acrobatics.png"
+    },
+    {
+      "cardType": "Adrenaline",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Adrenaline.png"
+    },
+    {
+      "cardType": "Afterimage",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Afterimage.png"
+    },
+    {
+      "cardType": "BladeDance",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/BladeDance.png"
+    },
+    {
+      "cardType": "Blur",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Blur.png"
+    },
+    {
+      "cardType": "BulletTime",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/BulletTime.png"
+    },
+    {
+      "cardType": "CalculatedGamble",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/CalculatedGamble.png"
+    },
+    {
+      "cardType": "CorrosiveWave",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/CorrosiveWave.png"
+    },
+    {
+      "cardType": "DaggerThrow",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/DaggerThrow.png"
+    },
+    {
+      "cardType": "Dash",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Dash.png"
+    },
+    {
+      "cardType": "DefendSilent",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/DefendSilent.png"
+    },
+    {
+      "cardType": "Distraction",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Distraction.png"
+    },
+    {
+      "cardType": "Envenom",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Envenom.png"
+    },
+    {
+      "cardType": "Expertise",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Expertise.png"
+    },
+    {
+      "cardType": "Expose",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Expose.png"
+    },
+    {
+      "cardType": "FanOfKnives",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/FanOfKnives.png"
+    },
+    {
+      "cardType": "Finisher",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Finisher.png"
+    },
+    {
+      "cardType": "FlickFlack",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/FlickFlack.png"
+    },
+    {
+      "cardType": "Footwork",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Footwork.png"
+    },
+    {
+      "cardType": "GrandFinale",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/GrandFinale.png"
+    },
+    {
+      "cardType": "InfiniteBlades",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/InfiniteBlades.png"
+    },
+    {
+      "cardType": "Malaise",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Malaise.png"
+    },
+    {
+      "cardType": "MementoMori",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/MementoMori.png"
+    },
+    {
+      "cardType": "Murder",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Murder.png"
+    },
+    {
+      "cardType": "Neutralize",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Neutralize.png"
+    },
+    {
+      "cardType": "Nightmare",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Nightmare.png"
+    },
+    {
+      "cardType": "NoxiousFumes",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/NoxiousFumes.png"
+    },
+    {
+      "cardType": "Outmaneuver",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Outmaneuver.png"
+    },
+    {
+      "cardType": "PiercingWail",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/PiercingWail.png"
+    },
+    {
+      "cardType": "Prepared",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Prepared.png"
+    },
+    {
+      "cardType": "Reflex",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Reflex.png"
+    },
+    {
+      "cardType": "Ricochet",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Ricochet.png"
+    },
+    {
+      "cardType": "SerpentForm",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/SerpentForm.png"
+    },
+    {
+      "cardType": "Shadowmeld",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Shadowmeld.png"
+    },
+    {
+      "cardType": "Skewer",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Skewer.png"
+    },
+    {
+      "cardType": "Slice",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Slice.png"
+    },
+    {
+      "cardType": "Strangle",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Strangle.png"
+    },
+    {
+      "cardType": "StrikeSilent",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/StrikeSilent.png"
+    },
+    {
+      "cardType": "Survivor",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Survivor.png"
+    },
+    {
+      "cardType": "Tactician",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Tactician.png"
+    },
+    {
+      "cardType": "TheHunt",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/TheHunt.png"
+    },
+    {
+      "cardType": "Tracking",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/Tracking.png"
+    },
+    {
+      "cardType": "WellLaidPlans",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/silent/WellLaidPlans.png"
+    },
+    {
+      "cardType": "Infection",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/status/Infection.png"
+    },
+    {
+      "cardType": "Void",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/status/Void.png"
+    },
+    {
+      "cardType": "Shiv",
+      "portraitPath": "res://AnimeWaifuSilent/card_portraits/token/Shiv.png"
+    }
+  ],
+  "ancientReplacements": [
+    {
+      "cardType": "Snakebite",
+      "ancientPortrait": "res://AnimeWaifuSilent/card_portraits/silent/Snakebite.png",
+      "configKey": "SnakebiteAncientStyle"
+    }
+  ]
+}

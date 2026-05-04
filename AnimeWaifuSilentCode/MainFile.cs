@@ -1,22 +1,33 @@
+using System.Reflection;
+
 using Godot;
 using HarmonyLib;
+
+using MegaCrit.Sts2.Core.Logging;
 using MegaCrit.Sts2.Core.Modding;
+
+using LogType = MegaCrit.Sts2.Core.Logging.LogType;
+using Logger = MegaCrit.Sts2.Core.Logging.Logger;
 
 namespace AnimeWaifuSilent.AnimeWaifuSilentCode;
 
-//You're recommended but not required to keep all your code in this package and all your assets in the AnimeWaifuSilent folder.
 [ModInitializer(nameof(Initialize))]
 public partial class MainFile : Node
 {
-    public const string ModId = "AnimeWaifuSilent"; //At the moment, this is used only for the Logger and harmony names.
+    public const string ModId = "AnimeWaifuSilent";
 
-    public static MegaCrit.Sts2.Core.Logging.Logger Logger { get; } =
-        new(ModId, MegaCrit.Sts2.Core.Logging.LogType.Generic);
+    public static Logger Logger { get; } = new(ModId, LogType.Generic);
 
     public static void Initialize()
     {
         Harmony harmony = new(ModId);
+        harmony.PatchAll(Assembly.GetExecutingAssembly());
 
-        harmony.PatchAll();
+        Logger.Info("AnimeWaifuSilent has been initialized!");
+
+        if (BaseLibIntegration.IsBaseLibLoaded)
+        {
+            BaseLibIntegration.RegisterBaseLibConfig();
+        }
     }
 }
