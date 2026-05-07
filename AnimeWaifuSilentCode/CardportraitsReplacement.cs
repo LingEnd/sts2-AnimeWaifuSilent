@@ -18,6 +18,9 @@ public static class CardPortraitReplacementPatch
     private static readonly Dictionary<string, Texture2D> ReplacementTextureCache = new(StringComparer.OrdinalIgnoreCase);
     private static readonly HashSet<ulong> ReplacementTextureIds = new();
 
+    /// <summary>
+    /// Replaces the card portrait with a custom mod image based on player configuration.
+    /// </summary>
     static void Postfix(CardModel __instance, ref Texture2D __result)
     {
         string cardTypeName = __instance.GetType().Name;
@@ -115,22 +118,6 @@ public static class CardPortraitReplacementPatch
         ReplacementTextureIds.Add(pseudoAtlas.GetInstanceId());
 
         return pseudoAtlas;
-    }
-
-    internal static bool TryGetReplacementPath(string cardTypeName, out string? path)
-    {
-        if (CardReplacementConfig.TryGetAncientPortrait(cardTypeName, out path))
-        {
-            return true;
-        }
-
-        if (CardReplacementConfig.TryGetNormalPortrait(cardTypeName, out path))
-        {
-            return true;
-        }
-
-        path = string.Empty;
-        return false;
     }
 }
 

@@ -34,6 +34,7 @@ public static class CardReplacementConfig
     private static CardReplacementData? _data;
     private static bool _loaded;
     private static bool _loadFailed;
+    private static Dictionary<string, string>? _cachedNormalReplacements;
 
     private const string ConfigPath = "res://AnimeWaifuSilent/card_replacements.json";
 
@@ -42,7 +43,12 @@ public static class CardReplacementConfig
         get
         {
             EnsureLoaded();
-            var dict = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            if (_cachedNormalReplacements != null)
+            {
+                return _cachedNormalReplacements;
+            }
+
+            _cachedNormalReplacements = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             if (_data?.NormalReplacements != null)
             {
@@ -50,12 +56,12 @@ public static class CardReplacementConfig
                 {
                     if (!string.IsNullOrEmpty(entry.CardType) && !string.IsNullOrEmpty(entry.PortraitPath))
                     {
-                        dict[entry.CardType] = entry.PortraitPath;
+                        _cachedNormalReplacements[entry.CardType] = entry.PortraitPath;
                     }
                 }
             }
 
-            return dict;
+            return _cachedNormalReplacements;
         }
     }
 

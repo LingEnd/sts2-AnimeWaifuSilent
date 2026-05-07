@@ -107,6 +107,6 @@ public static class CardFilterUtility
             return;
         }
 
-        canvasItem.TextureFilter = (CanvasItem.TextureFilterEnum)5;
+        canvasItem.TextureFilter = ModConfig.GetGodotFilterMode();
     }
 }
